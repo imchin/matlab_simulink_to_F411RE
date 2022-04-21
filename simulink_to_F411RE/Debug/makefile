@@ -61,8 +61,8 @@ all: main-build
 main-build: simulink_to_F411RE.elf secondary-outputs
 
 # Tool invocations
-simulink_to_F411RE.elf: $(OBJS) $(USER_OBJS) C:\Users\imark\Desktop\matlab_simulink_to_F411RE\simulink_to_F411RE\STM32F411RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "simulink_to_F411RE.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\imark\Desktop\matlab_simulink_to_F411RE\simulink_to_F411RE\STM32F411RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="simulink_to_F411RE.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+simulink_to_F411RE.elf: $(OBJS) $(USER_OBJS) C:\Users\imark\Documents\GitHub\matlab_simulink_to_F411RE\simulink_to_F411RE\STM32F411RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "simulink_to_F411RE.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\imark\Documents\GitHub\matlab_simulink_to_F411RE\simulink_to_F411RE\STM32F411RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="simulink_to_F411RE.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
