@@ -48,11 +48,12 @@ UART_HandleTypeDef huart2;
 DMA_HandleTypeDef hdma_usart2_rx;
 
 /* USER CODE BEGIN PV */
-uint8_t RxBuffer[64]={0};
+int8_t RxBuffer[64]={0};
 
 uint8_t data[7]={73,109,64,99,0,0,126};
 
 void uartprotocol();
+void Drivemotor(int PWM);
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -269,7 +270,7 @@ static void MX_TIM2_Init(void)
   htim2.Instance = TIM2;
   htim2.Init.Prescaler = 0;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 2048;
+  htim2.Init.Period = 3071;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   sConfig.EncoderMode = TIM_ENCODERMODE_TI12;
@@ -409,6 +410,9 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8|GPIO_PIN_9, GPIO_PIN_RESET);
+
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
@@ -422,16 +426,23 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
 
+  /*Configure GPIO pins : PB8 PB9 */
+  GPIO_InitStruct.Pin = GPIO_PIN_8|GPIO_PIN_9;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
 }
 
 /* USER CODE BEGIN 4 */
 uint8_t Posdata=0;
 uint8_t PosdataPre=0;
 
-uint8_t valueuart=0;
+int32_t valueuart=0;
 uint8_t stateuart=0;
 void uartprotocol(){
-	static uint8_t tempuart=0;
+	static int8_t tempuart=0;
 	Posdata=huart2.RxXferSize-huart2.hdmarx->Instance->NDTR;
 	if(Posdata!=PosdataPre ){
 
@@ -475,8 +486,10 @@ void uartprotocol(){
 			break;
 			case 5:
 				if(RxBuffer[PosdataPre]==126){
-					valueuart=tempuart;
-					htim1.Instance->CCR1=(valueuart*10000)/255;
+					valueuart=(int32_t)tempuart;
+					valueuart=(valueuart*10000)/255;
+//					htim1.Instance->CCR1=(valueuart*10000)/255;
+					Drivemotor(valueuart);
 					stateuart=0;
 
 				}else{
@@ -504,6 +517,40 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 		data[4]=value&0b11111111;
 		HAL_UART_Transmit_IT(&huart2, data, 7);
 	}
+}
+
+
+
+uint32_t aaabs(int x){
+
+	if(x<0){
+		return x*-1;
+	}else{
+		return x;
+	}
+}
+
+
+void Drivemotor(int PWM){
+	if(PWM<=0 && PWM>=-10000){
+		htim1.Instance->CCR1=aaabs(PWM);
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8,1);
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_9,0);
+	}else if (PWM<-10000){
+		htim1.Instance->CCR1=10000;
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8,1);
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_9,0);
+	}else if(PWM>=0 && PWM<=10000){
+		htim1.Instance->CCR1=aaabs(PWM);
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8,0);
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_9,1);
+	}else if(PWM>10000){
+		htim1.Instance->CCR1=10000;
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8,0);
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_9,1);
+	}
+
+
 }
 /* USER CODE END 4 */
 
